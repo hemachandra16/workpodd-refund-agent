@@ -1,0 +1,109 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * WORPODD design tokens.
+ * Minimalism + neobrutalist structure, forest-green accent.
+ * Light = warm white #FAFAF7 + ink #111.
+ * Dark  = near-black #0B0D10 + soft #E7E7E4.
+ * Accent: forest #14532D (light) / #2E8B57 (dark).
+ */
+
+:root {
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* Light */
+  --bg: #FAFAF7;
+  --surface: #FFFFFF;
+  --border: #111111;
+  --ink: #111111;
+  --muted: #6B6B66;
+  --accent: #14532D;        /* forest green */
+  --accent-ink: #FFFFFF;
+  --ok: #14532D;
+  --warn: #92400E;
+  --deny: #7C1D2C;
+}
+
+.dark {
+  --bg: #0B0D10;
+  --surface: #15181C;
+  --border: #E7E7E4;
+  --ink: #E7E7E4;
+  --muted: #8A8F98;
+  --accent: #2E8B57;
+  --accent-ink: #0B0D10;
+  --ok: #2E8B57;
+  --warn: #D97706;
+  --deny: #E5707E;
+}
+
+html,
+body {
+  background-color: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Monospace numerics where it matters: IDs, money, timestamps. */
+.tnum {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Neobrutalist default surface: hard 1px border, no radius, no shadow. */
+.panel {
+  border: 1px solid var(--border);
+  background-color: var(--surface);
+}
+
+/* Buttons: hard border, transparent until hover/active, mono uppercase labels. */
+.btn {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.5rem 0.9rem;
+  transition: background 0.08s linear, color 0.08s linear;
+}
+.btn:hover {
+  background: var(--ink);
+  color: var(--bg);
+}
+.btn-primary {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: var(--accent);
+}
+.btn-primary:hover {
+  background: var(--ink);
+  color: var(--bg);
+  border-color: var(--border);
+}
+
+/* Status chips: text + subtle outline, no icons/emoji. */
+.chip {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.12rem 0.4rem;
+  border: 1px solid var(--border);
+}
+
+/* Thin, hard rule lines only. */
+hr.rule {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 0;
+}
+
+/* Scrollbars: minimal, monochrome. */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--muted); border: 2px solid var(--bg); }

@@ -1,0 +1,71 @@
+[project]
+name = "worpodd-backend"
+version = "0.1.0"
+description = "WORPODD AI Customer Support (Refund) Agent — FastAPI + LangGraph + Groq backend"
+requires-python = ">=3.11"
+readme = "README.md"
+
+# Compatible-release bounds (~=) pin major.minor while letting patch updates
+# resolve — needed so prebuilt wheels exist on bleeding-edge Python (3.14).
+# Run `pip-audit` in CI (Phase 9) to catch any vulnerable resolution.
+dependencies = [
+    # --- Web framework ---
+    "fastapi~=0.115.0",
+    "uvicorn[standard]~=0.34.0",
+    "sse-starlette~=2.1.0",
+    "websockets~=14.1",
+    "python-multipart~=0.0.20",
+
+    # --- LLM / Agent ---
+    "langgraph~=0.2.60",
+    "langchain-core~=0.3.28",
+    "langchain-groq~=0.2.1",
+    "groq~=0.13.0",
+
+    # --- Data / validation ---
+    # pydantic >=2.11 ships prebuilt wheels for Python 3.14 (pydantic-core).
+    "pydantic>=2.11,<3",
+    "pydantic-settings>=2.7,<3",
+    "SQLAlchemy~=2.0.36",
+
+    # --- Security ---
+    "passlib[bcrypt]~=1.7.4",
+    "bcrypt~=4.2.0",
+    "slowapi~=0.1.9",
+    "itsdangerous~=2.2.0",
+
+    # --- Utilities ---
+    "httpx~=0.28.1",
+    "python-dotenv~=1.0.1",
+    "structlog~=24.4.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest~=8.3.0",
+    "pytest-asyncio~=0.25.0",
+    "httpx~=0.28.1",
+    "ruff~=0.8.0",
+    "pip-audit~=2.7.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "UP", "B", "S", "N"]
+ignore = ["S101"]  # assert in tests is fine
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
