@@ -11,7 +11,7 @@ Target length: 7 to 10 minutes.
 ## 2. Standard Approval
 
 - In `/chat`, submit:
-  `Please refund WP-1001 for ava.ross@example.com. It is unused.`
+  `Please refund WP-1001 for amelia.silver@example.com. It is unused.`
 - Show the live working state while SSE reasoning events arrive.
 - Show the final approved refund and clauses.
 - Switch to `/admin` and show the matching reasoning events.
@@ -27,8 +27,15 @@ Target length: 7 to 10 minutes.
 
 - Submit:
   `Please refund WP 1020 for retry.case@example.com. It is unused.`
-- Show the failed `get_order` call, retry with normalized `WP-1020`, then approval.
-- Explain that retries are visible in the append-only reasoning log.
+- Show the failed `get_order` call (status `failed`, `malformed_order_number`),
+  then the retry with the normalized `WP-1020` (status `retry`), then approval.
+- The reasoning timeline should show the distinct failed dot, then the retry dot,
+  then the green policy/approval dots. Point at both colored dots explicitly.
+- Verified trace (force_fallback): statuses run
+  `ok, fallback, ok, fallback, failed, fallback, retry, fallback, ok, fallback, ok, fallback`
+  ending in verdict `approved`, $118.00, clause R7.
+- Explain that retries are visible in the append-only reasoning log — this is
+  the strongest differentiator vs. scripted pipelines, so don't rush it.
 
 ## 5. Voice
 

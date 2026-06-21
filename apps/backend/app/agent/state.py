@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import enum
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from collections.abc import Callable
 from typing import Any, Optional, TypedDict
 
@@ -45,7 +45,7 @@ class ReasoningStep:
     tool_result_summary: str = ""
     attempt: int = 1
     duration_ms: float = 0.0
-    timestamp: str = field(default_factory=lambda: datetime.utcnow().isoformat() + "Z")
+    timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
     def to_dict(self) -> dict[str, Any]:
         d: dict[str, Any] = {
