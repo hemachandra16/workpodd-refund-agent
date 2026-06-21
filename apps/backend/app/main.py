@@ -13,6 +13,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.config import get_settings
+from app.data.seed import seed
+from app.db import Base, SessionLocal, engine
+from app.routes.admin import router as admin_router
+from app.routes.chat import router as chat_router
+from app.routes.voice import router as voice_router
 from app.security.headers import SecurityHeadersMiddleware
 from app.security.logging import configure_logging
 
@@ -23,6 +28,11 @@ log = structlog.get_logger()
 
 def create_app() -> FastAPI:
     settings.production_safety_check()
+    Base.metadata.create_all(bind=engine)
+    if not settings.is_production:
+        with SessionLocal() as session:
+            # Idempotent: keeps existing demo DBs current as new cases land.
+            seed(session)
 
     app = FastAPI(
         title="WORPODD Refund Agent",
@@ -44,6 +54,9 @@ def create_app() -> FastAPI:
 
     # --- Security headers (HSTS, CSP, X-Content-Type-Options, etc.) ---
     app.add_middleware(SecurityHeadersMiddleware)
+    app.include_router(chat_router)
+    app.include_router(voice_router)
+    app.include_router(admin_router)
 
     @app.get("/health", tags=["meta"])
     async def health() -> dict[str, object]:

@@ -1,136 +1,100 @@
-"""LangGraph refund agent — the compiled state machine.
+"""Dynamic LangGraph refund agent.
 
 Graph flow:
-    START → guard → classify → fetch_customer → fetch_order
-         → policy_engine → draft_response → respond → END
+    guard -> agent -> tools -> agent -> ... -> END
 
-Key security property: the policy_engine node calls the deterministic engine
-and writes the verdict into state. The draft_response node can only *style*
-the message around that verdict — it cannot change it.
-
-The graph is compiled once and reused for every customer interaction.
+The model decides which tool to call next by using Groq/LangChain tool calling.
+The graph only loops, validates tool calls, enforces policy-gating, and stops
+when the model returns a final response without tool calls.
 """
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Callable
 
 from langgraph.graph import END, StateGraph
 
 from app.agent.nodes import (
-    node_classify,
-    node_draft_response,
-    node_fetch_customer,
-    node_fetch_order,
+    node_agent,
     node_guard,
-    node_policy_engine,
-    node_respond,
+    node_tools,
+    route_after_agent,
+    route_after_guard,
 )
 from app.agent.state import AgentState, initial_state
 from app.db import SessionLocal
 
 
-def build_graph() -> StateGraph:
-    """Build and compile the refund agent graph.
+SessionFactory = Callable[[], Any]
 
-    Returns a compiled LangGraph runnable that accepts an AgentState dict
-    and returns the final state with reasoning_log populated.
-    """
+
+def build_graph(
+    *,
+    model: Any | None = None,
+    session_factory: SessionFactory | None = None,
+    force_fallback: bool = False,
+):
+    """Build and compile the dynamic refund agent graph."""
     workflow = StateGraph(AgentState)
+    factory = session_factory or SessionLocal
 
-    # Add nodes.
-    workflow.add_node("guard", _guard_with_db)
-    workflow.add_node("classify", node_classify)
-    workflow.add_node("fetch_customer", _fetch_customer_with_db)
-    workflow.add_node("fetch_order", _fetch_order_with_db)
-    workflow.add_node("policy_engine", _policy_engine_with_db)
-    workflow.add_node("draft_response", node_draft_response)
-    workflow.add_node("respond", node_respond)
+    def _agent_node(state: AgentState) -> AgentState:
+        return node_agent(state, model=model, force_fallback=force_fallback)
 
-    # Entry point.
+    def _tools_node(state: AgentState) -> AgentState:
+        db = factory()
+        try:
+            return node_tools(state, db)
+        finally:
+            db.close()
+
+    workflow.add_node("guard", node_guard)
+    workflow.add_node("agent", _agent_node)
+    workflow.add_node("tools", _tools_node)
+
     workflow.set_entry_point("guard")
-
-    # Conditional routing: if injection blocked, skip straight to respond.
     workflow.add_conditional_edges(
         "guard",
-        _route_guard,
+        route_after_guard,
         {
-            "blocked": "respond",
-            "safe": "classify",
+            "agent": "agent",
+            "end": END,
         },
     )
-
-    # Linear flow from classify to policy_engine.
-    workflow.add_edge("classify", "fetch_customer")
-    workflow.add_edge("fetch_customer", "fetch_order")
-    workflow.add_edge("fetch_order", "policy_engine")
-
-    # After policy_engine: always draft (even if no verdict → ask for info).
-    workflow.add_edge("policy_engine", "draft_response")
-
-    # Draft → respond → END.
-    workflow.add_edge("draft_response", "respond")
-    workflow.add_edge("respond", END)
+    workflow.add_conditional_edges(
+        "agent",
+        route_after_agent,
+        {
+            "tools": "tools",
+            "end": END,
+        },
+    )
+    workflow.add_edge("tools", "agent")
 
     return workflow.compile()
 
 
-# --- DB-injected wrappers (LangGraph nodes can't take extra args) ---
-
-def _guard_with_db(state: AgentState) -> AgentState:
-    db = SessionLocal()
-    try:
-        return node_guard(state, db)
-    finally:
-        db.close()
-
-
-def _fetch_customer_with_db(state: AgentState) -> AgentState:
-    db = SessionLocal()
-    try:
-        return node_fetch_customer(state, db)
-    finally:
-        db.close()
-
-
-def _fetch_order_with_db(state: AgentState) -> AgentState:
-    db = SessionLocal()
-    try:
-        return node_fetch_order(state, db)
-    finally:
-        db.close()
-
-
-def _policy_engine_with_db(state: AgentState) -> AgentState:
-    db = SessionLocal()
-    try:
-        return node_policy_engine(state, db)
-    finally:
-        db.close()
-
-
-def _route_guard(state: AgentState) -> str:
-    """Route after the guard node: blocked → respond, safe → classify."""
-    if state.get("injection_blocked"):
-        return "blocked"
-    return "safe"
-
-
-# Compiled singleton.
 compiled_graph = build_graph()
 
 
-def run_agent(user_input: str, metadata: dict[str, Any] | None = None) -> AgentState:
-    """
-    Run the full agent graph for a single user message.
-
-    Args:
-        user_input: The customer's message.
-        metadata: Optional dict (session_id, etc.) for audit trail.
-
-    Returns:
-        The final AgentState with reasoning_log, verdict, and response_text.
-    """
-    initial_state_dict: dict = initial_state(user_input=user_input, metadata=metadata)
-    final_state = compiled_graph.invoke(initial_state_dict)
-    return final_state
+def run_agent(
+    user_input: str,
+    metadata: dict[str, Any] | None = None,
+    *,
+    model: Any | None = None,
+    session_factory: SessionFactory | None = None,
+    force_fallback: bool = False,
+    event_sink: Callable[[dict[str, Any]], None] | None = None,
+) -> AgentState:
+    """Run the dynamic refund agent for one customer message."""
+    graph = (
+        compiled_graph
+        if model is None and session_factory is None and not force_fallback
+        else build_graph(model=model, session_factory=session_factory, force_fallback=force_fallback)
+    )
+    initial_state_dict: dict = initial_state(
+        user_input=user_input,
+        metadata=metadata,
+        event_sink=event_sink,
+    )
+    return graph.invoke(initial_state_dict)

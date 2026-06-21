@@ -1,31 +1,32 @@
-# WORPODD Refund Agent — Frontend
+# WORPODD Frontend
 
-Next.js (App Router) + TypeScript + Tailwind UI for the customer chat surface
-and the admin reasoning-log dashboard.
-
-## Design system
-Minimalism + neobrutalist structure:
-- Hard 1px borders, ~2px radius, bold display type
-- JetBrains Mono for IDs / money / timestamps / logs
-- Single forest-green accent (`#14532D` light / `#2E8B57` dark)
-- No gradients, no soft shadows, no emoji
-- Light + dark + system via `next-themes`
-
-Tokens live in `app/globals.css` (`:root` / `.dark`); Tailwind maps them in
-`tailwind.config.ts`.
-
-## Setup
-```bash
-cd apps/frontend
-npm install
-copy .env.example .env
-npm run dev
-```
-
-API calls are proxied through `/api/*` → backend (see `next.config.mjs`) so the
-`GROQ_API_KEY` stays strictly server-side.
+Next.js App Router UI for the refund workspace and admin dashboard.
 
 ## Routes
-- `/` — landing
-- `/chat` — customer chat + mic (Phase 6)
-- `/admin` — live reasoning logs + decisions (Phase 7)
+
+- `/chat`: customer chat, visible streaming work state, microphone controls
+- `/admin`: login-gated reasoning dashboard and live event stream
+- `/`: redirects users into the usable support workspace
+
+## Chat UI
+
+The chat page starts with a welcoming agent message. Typed messages use
+`/api/chat/stream`, so the UI can show the current reasoning step while the
+backend works. Voice messages use `/api/voice` and move through these states:
+
+```text
+idle -> recording -> transcribing -> agent responding -> speaking -> idle
+```
+
+All `/api/*` requests are proxied to FastAPI by `next.config.mjs`, keeping
+`GROQ_API_KEY` server-side only.
+
+## Local Commands
+
+```powershell
+cd apps/frontend
+npm install
+npm run dev
+npm run build
+npm audit --audit-level=high
+```

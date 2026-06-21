@@ -10,17 +10,19 @@ readme = "README.md"
 # Run `pip-audit` in CI (Phase 9) to catch any vulnerable resolution.
 dependencies = [
     # --- Web framework ---
-    "fastapi~=0.115.0",
+    "fastapi>=0.138,<0.139",
+    "starlette>=1.3.1,<2",
     "uvicorn[standard]~=0.34.0",
     "sse-starlette~=2.1.0",
-    "websockets~=14.1",
+    "websockets>=15,<16",
     "python-multipart~=0.0.20",
 
     # --- LLM / Agent ---
-    "langgraph~=0.2.60",
-    "langchain-core~=0.3.28",
-    "langchain-groq~=0.2.1",
-    "groq~=0.13.0",
+    "langgraph>=1.2,<2",
+    "langchain-core>=1.4.7,<2",
+    "langchain-groq>=1.1.3,<2",
+    "langsmith>=0.8.18,<0.9",
+    "groq>=0.30,<1",
 
     # --- Data / validation ---
     # pydantic >=2.11 ships prebuilt wheels for Python 3.14 (pydantic-core).
@@ -36,14 +38,14 @@ dependencies = [
 
     # --- Utilities ---
     "httpx~=0.28.1",
-    "python-dotenv~=1.0.1",
+    "python-dotenv>=1.2.2,<2",
     "structlog~=24.4.0",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "pytest~=8.3.0",
-    "pytest-asyncio~=0.25.0",
+    "pytest>=9.0.3,<10",
+    "pytest-asyncio>=1.4,<2",
     "httpx~=0.28.1",
     "ruff~=0.8.0",
     "pip-audit~=2.7.0",

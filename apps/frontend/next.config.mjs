@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  devIndicators: false,
   // Proxy API calls to the FastAPI backend to avoid CORS in dev and keep
   // the GROQ_API_KEY strictly server-side.
   async rewrites() {

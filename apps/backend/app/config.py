@@ -26,8 +26,8 @@ class Settings(BaseSettings):
     groq_api_key: str = ""
     groq_llm_model: str = "llama-3.3-70b-versatile"
     groq_stt_model: str = "whisper-large-v3-turbo"
-    groq_tts_model: str = "playai-tts"
-    groq_tts_voice: str = "Arista-PlayAI"
+    groq_tts_model: str = "canopylabs/orpheus-v1-english"
+    groq_tts_voice: str = "troy"
 
     # --- Server ---
     backend_host: str = "127.0.0.1"
@@ -77,8 +77,8 @@ class Settings(BaseSettings):
             problems.append("ADMIN_SESSION_SECRET is a placeholder")
         if not self.groq_available:
             problems.append("GROQ_API_KEY missing/placeholder")
-        if not self.admin_password_hash:
-            problems.append("ADMIN_PASSWORD_HASH missing")
+        if not self.admin_password_hash or not self.admin_password_hash.startswith("$2"):
+            problems.append("ADMIN_PASSWORD_HASH missing/malformed")
         if problems:
             raise RuntimeError("Refusing to boot in production: " + "; ".join(problems))
 

@@ -165,3 +165,22 @@ class RefundRecord(Base):
     # Idempotency key: order_id + session. Prevents replay of an approval.
     idempotency_key: Mapped[str] = mapped_column(String(80), unique=True, index=True)
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+
+
+class ReasoningEvent(Base):
+    """Append-only event stream for agent reasoning and tool execution."""
+
+    __tablename__ = "reasoning_events"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    session_id: Mapped[str] = mapped_column(String(80), index=True)
+    sequence: Mapped[int] = mapped_column(Integer)
+    node: Mapped[str] = mapped_column(String(40), index=True)
+    phase: Mapped[str] = mapped_column(String(40), index=True)
+    status: Mapped[str] = mapped_column(String(24), index=True)
+    summary: Mapped[str] = mapped_column(Text, default="")
+    tool_called: Mapped[str] = mapped_column(String(80), default="", index=True)
+    tool_args_json: Mapped[str] = mapped_column(Text, default="{}")
+    tool_result_summary: Mapped[str] = mapped_column(Text, default="")
+    event_json: Mapped[str] = mapped_column(Text, default="{}")
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())

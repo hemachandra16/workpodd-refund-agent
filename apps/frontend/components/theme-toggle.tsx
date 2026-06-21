@@ -3,10 +3,7 @@
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 
-/**
- * Minimal light/dark/system toggle. Text labels only — no emoji, no icons —
- * consistent with the neobrutalist direction.
- */
+/** Compact light/dark/system toggle for the Ledger Calm shell. */
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -22,7 +19,7 @@ export function ThemeToggle() {
     <button
       type="button"
       onClick={cycle}
-      className="btn tnum"
+      className="btn tnum text-xs"
       aria-label="Cycle theme: light, dark, system"
       suppressHydrationWarning
     >

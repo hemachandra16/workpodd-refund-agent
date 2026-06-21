@@ -1,39 +1,33 @@
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
 
-/**
- * Landing shell. Real chat surface lands in Phase 6; this confirms the design
- * system + theme system render correctly end-to-end.
- */
 export default function Home() {
   return (
-    <main className="min-h-screen flex flex-col">
-      <header className="border-b border-border">
-        <div className="max-w-content mx-auto px-6 py-4 flex items-center justify-between">
-          <span className="tnum text-sm tracking-widest uppercase">WORPODD · Support</span>
+    <main className="shell">
+      <header className="topbar">
+        <div className="mx-auto flex max-w-content items-center justify-between px-5 py-4">
+          <div>
+            <p className="label">WORPODD Support</p>
+            <h1 className="display text-xl font-semibold">Refund operations</h1>
+          </div>
           <ThemeToggle />
         </div>
       </header>
 
-      <section className="flex-1 flex items-center justify-center px-6">
-        <div className="panel max-w-md w-full p-8">
-          <h1 className="text-3xl font-bold tracking-tight">Refund agent</h1>
-          <p className="mt-3 text-muted">
-            An automated support agent that resolves or denies e-commerce refunds
-            against a strict policy. Voice-enabled, fully logged.
-          </p>
-          <div className="mt-6 flex gap-3">
-            <Link href="/chat" className="btn btn-primary no-underline">Open chat</Link>
-            <Link href="/admin" className="btn no-underline">Admin</Link>
-          </div>
+      <section className="mx-auto grid min-h-[calc(100vh-5rem)] max-w-content place-items-center px-5 py-10">
+        <div className="grid w-full gap-5 md:grid-cols-2">
+          <Link className="panel p-6 no-underline transition hover:border-trust" href="/chat?demo=1">
+            <p className="label">Customer</p>
+            <h2 className="display mt-2 text-2xl font-semibold">Refund workspace</h2>
+            <p className="mt-3 text-sm leading-6 text-muted">Conversation, case file, policy decision, and Clause Rail timeline.</p>
+          </Link>
+          <Link className="panel p-6 no-underline transition hover:border-trust" href="/admin">
+            <p className="label">Admin</p>
+            <h2 className="display mt-2 text-2xl font-semibold">Reasoning operations</h2>
+            <p className="mt-3 text-sm leading-6 text-muted">Auth-gated sessions, live event stream, retry markers, and audit context.</p>
+          </Link>
         </div>
       </section>
-
-      <footer className="border-t border-border">
-        <div className="max-w-content mx-auto px-6 py-3 tnum text-xs uppercase tracking-widest text-muted">
-          v0.1.0 · build scaffold
-        </div>
-      </footer>
     </main>
   );
 }

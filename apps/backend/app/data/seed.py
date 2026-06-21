@@ -294,6 +294,17 @@ CASES: list[tuple[str, dict[str, Any], list[dict[str, Any]]]] = [
             items=[_item(sku="SKU-A6", name="Denim Jacket", price_cents=6500, reported_unused=False)],
         )],
     ),
+    # ---- Retry demo: malformed input "WP 1020" should retry as WP-1020 ----
+    (
+        "Retry demo malformed order lookup",
+        {"email": "retry.case@example.com", "name": "Riley Trace", "token_last4": "2020"},
+        [_order(
+            order_number="WP-1020", subtotal_cents=11800, shipping_cents=500, total_cents=12300,
+            delivery_date=D(8), purchase_date=D(10),
+            items=[_item(sku="SKU-R1", name="Canvas Weekender", category=ItemCategory.apparel,
+                         price_cents=11800)],
+        )],
+    ),
 ]
 
 
@@ -314,13 +325,14 @@ def seed(session: Session) -> dict[str, int]:
             customers_added += 1
 
         for od in orders:
-            items_data = od.pop("items", [])
+            od_data = dict(od)
+            items_data = od_data.pop("items", [])
             existing_order = session.scalar(
-                select(Order).where(Order.order_number == od["order_number"])
+                select(Order).where(Order.order_number == od_data["order_number"])
             )
             if existing_order:
                 continue
-            order = Order(customer_id=customer.id, **od)
+            order = Order(customer_id=customer.id, **od_data)
             session.add(order)
             session.flush()
             orders_added += 1

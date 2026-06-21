@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
+import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "WORPODD · Support",
-  description: "AI Customer Support Agent — e-commerce refund resolution",
+  title: "WORPODD Support",
+  description: "Refund support workspace with live policy reasoning.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

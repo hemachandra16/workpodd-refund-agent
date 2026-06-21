@@ -1,13 +1,6 @@
 import type { Config } from "tailwindcss";
 
-/**
- * WORPODD design system.
- * Minimalism + neobrutalist structure:
- *   - hard 1px borders, near-zero radius, bold display type
- *   - JetBrains Mono for numerics/IDs/logs
- *   - single forest-green accent, no gradients, no shadows, no emoji
- *   - high-contrast light + dark via CSS variables + next-themes
- */
+/** Ledger Calm design system tokens mapped from app/globals.css. */
 const config: Config = {
   darkMode: "class",
   content: [
@@ -17,34 +10,33 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Semantic tokens bound to CSS variables (see globals.css).
-        bg: "var(--bg)",
+        paper: "var(--paper)",
+        mist: "var(--mist)",
         surface: "var(--surface)",
-        border: "var(--border)",
+        "surface-subtle": "var(--surface-subtle)",
+        line: "var(--line)",
         ink: "var(--ink)",
         muted: "var(--muted)",
-        accent: "var(--accent)",
-        "accent-ink": "var(--accent-ink)",
-        ok: "var(--ok)",
-        warn: "var(--warn)",
+        trust: "var(--trust)",
+        approval: "var(--approval)",
+        review: "var(--review)",
         deny: "var(--deny)",
       },
       fontFamily: {
-        sans: ["var(--font-sans)", "system-ui", "sans-serif"],
+        sans: ["var(--font-body)", "system-ui", "sans-serif"],
+        display: ["var(--font-display)", "system-ui", "sans-serif"],
         mono: ["var(--font-mono)", "ui-monospace", "monospace"],
       },
       borderRadius: {
-        // Intentionally tiny — neobrutalist.
-        none: "0px",
-        xs: "2px",
-        sm: "3px",
+        xs: "4px",
+        sm: "6px",
+        md: "8px",
       },
       boxShadow: {
-        // No soft shadows. One hard offset border-shadow for emphasis only.
-        edge: "2px 2px 0 0 var(--border)",
+        calm: "0 8px 24px rgba(23, 32, 28, 0.08)",
       },
       maxWidth: {
-        content: "72rem",
+        content: "78rem",
       },
     },
   },

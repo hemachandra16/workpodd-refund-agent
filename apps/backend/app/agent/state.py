@@ -16,6 +16,7 @@ from __future__ import annotations
 import enum
 from dataclasses import dataclass, field
 from datetime import datetime
+from collections.abc import Callable
 from typing import Any, Optional, TypedDict
 
 
@@ -23,11 +24,8 @@ class AgentPhase(str, enum.Enum):
     """Current position in the graph."""
     START = "start"
     GUARD = "guard"
-    CLASSIFY = "classify"
-    FETCH_CUSTOMER = "fetch_customer"
-    FETCH_ORDER = "fetch_order"
-    POLICY_ENGINE = "policy_engine"
-    DRAFT_RESPONSE = "draft_response"
+    AGENT = "agent"
+    TOOL = "tool"
     RESPOND = "respond"
     END = "end"
 
@@ -41,9 +39,11 @@ class ReasoningStep:
     node: str
     phase: str
     summary: str
+    status: str = "ok"
     tool_called: str = ""
     tool_args: dict[str, Any] = field(default_factory=dict)
     tool_result_summary: str = ""
+    attempt: int = 1
     duration_ms: float = 0.0
     timestamp: str = field(default_factory=lambda: datetime.utcnow().isoformat() + "Z")
 
@@ -51,7 +51,9 @@ class ReasoningStep:
         d: dict[str, Any] = {
             "node": self.node,
             "phase": self.phase,
+            "status": self.status,
             "summary": self.summary,
+            "attempt": self.attempt,
             "duration_ms": round(self.duration_ms, 1),
             "timestamp": self.timestamp,
         }
@@ -80,7 +82,13 @@ class AgentState(TypedDict):
         refund_cents:        cents the engine approved (0 if denied)
         clauses_hit:         list of clause IDs that fired
         response_text:       final LLM-drafted response to the customer
-        reasoning_log:       list[dict] — serialized ReasoningSteps
+        reasoning_log:       list[dict] - serialized ReasoningSteps
+        pending_tool_calls:  tool calls emitted by the latest model turn
+        tool_history:        tool results from this run, used for policy gating
+        tool_attempts:       per-tool+args attempt counters for retry visibility
+        agent_steps:         number of model turns taken so far
+        policy_checked:      True once check_refund_policy succeeds in this run
+        event_sink:          optional callback invoked as each reasoning step is appended
         phase:               current AgentPhase string
         injection_blocked:   True if the guard node blocked the message
         error:               any unhandled error message
@@ -99,6 +107,12 @@ class AgentState(TypedDict):
     clauses_hit: list
     response_text: str
     reasoning_log: list
+    pending_tool_calls: list
+    tool_history: list
+    tool_attempts: dict
+    agent_steps: int
+    policy_checked: bool
+    event_sink: Optional[Callable[[dict[str, Any]], None]]
     phase: str
     injection_blocked: bool
     error: str
@@ -109,10 +123,18 @@ def add_step(state: dict, step: ReasoningStep) -> None:
     """Append a reasoning step to the state's audit log (mutates in-place)."""
     if "reasoning_log" not in state:
         state["reasoning_log"] = []
-    state["reasoning_log"].append(step.to_dict())
+    step_dict = step.to_dict()
+    state["reasoning_log"].append(step_dict)
+    sink = state.get("event_sink")
+    if callable(sink):
+        sink(step_dict)
 
 
-def initial_state(user_input: str, metadata: dict[str, Any] | None = None) -> dict:
+def initial_state(
+    user_input: str,
+    metadata: dict[str, Any] | None = None,
+    event_sink: Callable[[dict[str, Any]], None] | None = None,
+) -> dict:
     """Create a fresh AgentState dict with defaults."""
     return {
         "messages": [],
@@ -128,6 +150,12 @@ def initial_state(user_input: str, metadata: dict[str, Any] | None = None) -> di
         "clauses_hit": [],
         "response_text": "",
         "reasoning_log": [],
+        "pending_tool_calls": [],
+        "tool_history": [],
+        "tool_attempts": {},
+        "agent_steps": 0,
+        "policy_checked": False,
+        "event_sink": event_sink,
         "phase": AgentPhase.START.value,
         "injection_blocked": False,
         "error": "",

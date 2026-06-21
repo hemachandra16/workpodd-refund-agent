@@ -1,1 +1,1 @@
-"""Voice pipeline: Whisper STT + PlayAI TTS over WebSocket (Phase 8)."""
+"""Voice pipeline: Whisper STT + Groq speech over WebSocket (Phase 8)."""
