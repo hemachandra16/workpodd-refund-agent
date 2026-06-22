@@ -172,11 +172,21 @@ def get_customer(db: Session, email: str) -> dict:
     }
 
 
-def get_order(db: Session, order_number: str) -> dict:
-    """Look up an order by order number. Returns order plus line items."""
+def get_order(db: Session, order_number: str, *, for_customer_id: int | None = None) -> dict:
+    """Look up an order by order number. Returns order plus line items.
+
+    If ``for_customer_id`` is provided, the order is only returned when it
+    belongs to that customer — otherwise we deny with ``found: False`` rather
+    than disclosing that the order exists for someone else. This is the
+    BOLA/IDOR defense: an authenticated customer cannot read another customer's
+    order by guessing the order number.
+    """
     order = db.scalar(select(Order).where(Order.order_number == order_number))
     if not order:
         return {"found": False, "order_number": order_number}
+    if for_customer_id is not None and order.customer_id != for_customer_id:
+        # Do not reveal that the order exists for a different customer.
+        return {"found": False, "order_number": order_number, "not_owned": True}
     items = []
     for it in order.items:
         items.append({
@@ -222,11 +232,21 @@ def check_refund_policy(
     reason: str = "unwanted",
     wants_payment_method_change: bool = False,
     is_bundle_partial: bool = False,
+    for_customer_id: int | None = None,
 ) -> dict:
-    """Run the deterministic policy engine against the order."""
+    """Run the deterministic policy engine against the order.
+
+    ``for_customer_id`` enforces the same BOLA/IDOR guard as ``get_order``:
+    if provided and the order belongs to a different customer, the policy
+    result is refused (order treated as not found). The agent therefore cannot
+    be induced into running the policy engine — and the action tools gated on
+    it — against another customer's order.
+    """
     order = db.scalar(select(Order).where(Order.order_number == order_number))
     if not order:
         return {"error": "Order not found", "order_number": order_number}
+    if for_customer_id is not None and order.customer_id != for_customer_id:
+        return {"error": "Order not found", "order_number": order_number, "not_owned": True}
 
     cust = db.scalar(select(Customer).where(Customer.id == order.customer_id))
     refund_count = cust.refund_count_90d if cust else 0
@@ -255,6 +275,7 @@ def process_refund(
     *,
     refund_cents: int = 0,
     reason: str = "unwanted",
+    for_customer_id: int | None = None,
 ) -> dict:
     """Prepare an approved refund action.
 
@@ -264,6 +285,8 @@ def process_refund(
     order = db.scalar(select(Order).where(Order.order_number == order_number))
     if not order:
         return {"processed": False, "error": "Order not found", "order_number": order_number}
+    if for_customer_id is not None and order.customer_id != for_customer_id:
+        return {"processed": False, "error": "Order not found", "order_number": order_number, "not_owned": True}
     return {
         "processed": True,
         "order_number": order_number,
@@ -274,11 +297,19 @@ def process_refund(
     }
 
 
-def deny_refund(db: Session, order_number: str, *, reason: str = "unwanted") -> dict:
+def deny_refund(
+    db: Session,
+    order_number: str,
+    *,
+    reason: str = "unwanted",
+    for_customer_id: int | None = None,
+) -> dict:
     """Prepare a denial action after the policy engine has denied the case."""
     order = db.scalar(select(Order).where(Order.order_number == order_number))
     if not order:
         return {"denied": False, "error": "Order not found", "order_number": order_number}
+    if for_customer_id is not None and order.customer_id != for_customer_id:
+        return {"denied": False, "error": "Order not found", "order_number": order_number, "not_owned": True}
     return {
         "denied": True,
         "order_number": order_number,
@@ -293,11 +324,14 @@ def flag_for_escalation(
     *,
     reason: str = "unwanted",
     message: str = "",
+    for_customer_id: int | None = None,
 ) -> dict:
     """Prepare a manual-review escalation after a policy hold verdict."""
     order = db.scalar(select(Order).where(Order.order_number == order_number))
     if not order:
         return {"flagged": False, "error": "Order not found", "order_number": order_number}
+    if for_customer_id is not None and order.customer_id != for_customer_id:
+        return {"flagged": False, "error": "Order not found", "order_number": order_number, "not_owned": True}
     return {
         "flagged": True,
         "order_number": order_number,

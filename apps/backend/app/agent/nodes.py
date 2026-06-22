@@ -232,7 +232,10 @@ def _execute_one_tool_call(state: dict, db, call: dict[str, Any]) -> None:
     try:
         prepared_args = validate_tool_args(name, raw_args)
         _enforce_policy_gate(state, name, prepared_args)
-        result = _call_tool(db, name, prepared_args)
+        # BOLA/IDOR defense: once a customer identity has been resolved in this
+        # trace, every order-touching tool is scoped to that customer only.
+        resolved_customer_id = int(state.get("customer_id") or 0) or None
+        result = _call_tool(db, name, prepared_args, for_customer_id=resolved_customer_id)
         status = _tool_status(name, result, attempt)
         _update_state_from_tool(state, name, prepared_args, result)
     except ToolValidationError as exc:
@@ -271,10 +274,19 @@ def _execute_one_tool_call(state: dict, db, call: dict[str, Any]) -> None:
     add_step(state, step)
 
 
-def _call_tool(db, name: str, args: dict[str, Any]) -> dict[str, Any]:
+# Tools that read or act on an order. For these, we thread the resolved
+# customer_id from state as ``for_customer_id`` so an authenticated customer
+# cannot reach into another customer's order (BOLA/IDOR defense). get_customer
+# is excluded because it IS the identity-resolution step.
+_ORDER_TOOLS = {"get_order", "check_refund_policy", "process_refund", "deny_refund", "flag_for_escalation"}
+
+
+def _call_tool(db, name: str, args: dict[str, Any], *, for_customer_id: int | None = None) -> dict[str, Any]:
     fn = TOOL_FUNCTIONS.get(name)
     if fn is None:
         raise ToolValidationError("unknown_tool", f"Unknown tool: {name}")
+    if name in _ORDER_TOOLS and for_customer_id:
+        args = {**args, "for_customer_id": for_customer_id}
     return fn(db, **args)
 
 

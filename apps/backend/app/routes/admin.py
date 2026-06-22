@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sse_starlette.sse import EventSourceResponse
 
+from app.config import get_settings
 from app.db import SessionLocal
 from app.models import ReasoningEvent
 from app.security.auth import (
@@ -20,7 +21,12 @@ from app.security.auth import (
     verify_admin_password,
     verify_admin_token,
 )
-from app.security.rate_limit import enforce_rate_limit
+from app.security.rate_limit import (
+    enforce_login_throttle,
+    enforce_rate_limit,
+    record_login_failure,
+    record_login_success,
+)
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -44,18 +50,29 @@ def require_admin(token: str | None = Cookie(default=None, alias=ADMIN_COOKIE)) 
 
 
 @router.post("/login", dependencies=[Depends(admin_rate_limit)])
-async def login(request: AdminLoginRequest, response: Response) -> dict[str, str]:
-    if not verify_admin_password(request.username, request.password):
+async def login(login_request: AdminLoginRequest, raw_request: Request, response: Response) -> dict[str, str]:
+    # Stricter per-(username, IP) lockout than the general admin rate limit.
+    enforce_login_throttle(login_request.username, raw_request)
+
+    if not verify_admin_password(login_request.username, login_request.password):
+        record_login_failure(login_request.username, raw_request)
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_credentials")
+
+    record_login_success(login_request.username, raw_request)
+
+    # The Secure flag must be set whenever we run over HTTPS (production).
+    # In dev (localhost, http) Secure would prevent the browser from storing
+    # the cookie at all, so it is gated on the environment.
+    secure_cookie = get_settings().is_production
     response.set_cookie(
         ADMIN_COOKIE,
-        create_admin_token(request.username),
+        create_admin_token(login_request.username),
         max_age=ADMIN_COOKIE_MAX_AGE,
         httponly=True,
         samesite="lax",
-        secure=False,
+        secure=secure_cookie,
     )
-    return {"status": "ok", "username": request.username}
+    return {"status": "ok", "username": login_request.username}
 
 
 @router.post("/logout", dependencies=[Depends(admin_rate_limit)])
