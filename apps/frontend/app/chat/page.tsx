@@ -149,17 +149,12 @@ export default function ChatPage() {
     let buffer = "";
     const receivedEvents: ReasoningEvent[] = [];
 
-    // Parse a single SSE frame into its event name + payload, applying it to
-    // the right piece of UI state. Extracted so we can call it both inside the
-    // read loop AND once more after the stream closes to drain any final frame
-    // that didn't end with a trailing \n\n (the most common reason the agent's
-    // reply never rendered: the `final` frame was the last thing in the stream
-    // and sat unprocessed in the buffer when the reader signalled done).
     function processFrame(frame: string) {
-      const lines = frame.split("\n");
+      // A frame may contain multiple "data:" lines; join them per the SSE spec.
       let eventName = "message";
       const dataLines: string[] = [];
-      for (const line of lines) {
+      for (const rawLine of frame.split("\n")) {
+        const line = rawLine.trim();
         if (line.startsWith("event:")) eventName = line.slice(6).trim();
         else if (line.startsWith("data:")) dataLines.push(line.slice(5).trim());
       }
@@ -172,10 +167,7 @@ export default function ChatPage() {
       } else if (eventName === "final") {
         const finalPayload = payload as Omit<ChatResponse, "reasoning_log">;
         setSessionId(finalPayload.session_id);
-        setResult({
-          ...finalPayload,
-          reasoning_log: receivedEvents,
-        });
+        setResult({ ...finalPayload, reasoning_log: receivedEvents });
         setMessages((current) => [
           ...current,
           { role: "agent", content: finalPayload.response },
@@ -183,22 +175,27 @@ export default function ChatPage() {
       }
     }
 
-    // Each SSE frame is separated by a blank line (\n\n). We accumulate bytes
-    // into `buffer`, peel off complete frames, and keep the trailing partial
-    // frame for the next read.
     while (true) {
       const { value, done } = await reader.read();
       if (done) break;
-      buffer += decoder.decode(value, { stream: true });
+      // Normalize CRLF (\r\n) to LF (\n) FIRST. sse-starlette (and most HTTP
+      // servers) emit \r\n line endings; the SSE spec's frame separator is a
+      // blank line, which with CRLF is \r\n\r\n. Splitting on "\n\n" alone
+      // leaves stray \r characters at frame boundaries, which corrupts
+      // JSON.parse ("non-whitespace character after JSON"). Normalizing to LF
+      // makes the "\n\n" split correct regardless of transport line endings.
+      buffer += decoder.decode(value, { stream: true }).replace(/\r\n/g, "\n");
+
       const frames = buffer.split("\n\n");
-      // Keep the last (possibly partial) chunk for the next iteration.
+      // Keep the last (possibly partial) frame for the next iteration.
       buffer = frames.pop() ?? "";
-      for (const frame of frames) processFrame(frame);
+      for (const frame of frames) {
+        const trimmed = frame.trim();
+        if (trimmed) processFrame(trimmed);
+      }
     }
 
-    // Drain any final frame left in the buffer when the stream closed. Without
-    // this, the agent's reply (the last `final` event) can be silently dropped
-    // if it wasn't followed by a trailing blank line.
+    // Drain any final frame left in the buffer when the stream closed.
     const tail = buffer.trim();
     if (tail) processFrame(tail);
   }
