@@ -22,6 +22,11 @@ router = APIRouter(tags=["chat"])
 
 
 class ChatRequest(BaseModel):
+    # Reject unexpected fields (mass-assignment defense): a request carrying
+    # e.g. is_admin=true or refund_cents=99999 is refused with 422 rather than
+    # silently accepted and ignored.
+    model_config = {"extra": "forbid"}
+
     message: str = Field(min_length=1, max_length=1000)
     session_id: str | None = Field(default=None, max_length=80)
     force_fallback: bool = False

@@ -32,6 +32,9 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 
 
 class AdminLoginRequest(BaseModel):
+    # Reject unexpected fields (mass-assignment defense).
+    model_config = {"extra": "forbid"}
+
     username: str = Field(min_length=1, max_length=80)
     password: str = Field(min_length=1, max_length=200)
 

@@ -20,6 +20,12 @@ from app.voice.service import VoiceUnavailableError, synthesize_speech, transcri
 
 router = APIRouter(tags=["voice"])
 
+# Maximum accepted audio upload size. A few seconds of 16 kHz webm audio is
+# well under 1 MB; 10 MB is a generous ceiling that still rejects the obvious
+# memory-exhaustion DoS (multi-GB uploads). Applies to both the HTTP upload
+# and the WebSocket base64 path.
+MAX_VOICE_AUDIO_BYTES = 10 * 1024 * 1024  # 10 MB
+
 
 class VoiceResponse(BaseModel):
     session_id: str
@@ -48,11 +54,23 @@ def _dev_transcript_override(transcript_override: str | None) -> str | None:
 async def _read_audio(audio: UploadFile | None) -> tuple[bytes, str, str]:
     if audio is None:
         return b"", "refund-request.webm", "audio/webm"
-    return (
-        await audio.read(),
-        audio.filename or "refund-request.webm",
-        audio.content_type or "application/octet-stream",
-    )
+    filename = audio.filename or "refund-request.webm"
+    content_type = audio.content_type or "application/octet-stream"
+
+    # Stream the upload in chunks and cap the total size so a malicious
+    # multi-GB upload is rejected before it can exhaust server memory.
+    buf = bytearray()
+    while True:
+        chunk = await audio.read(1024 * 1024)
+        if not chunk:
+            break
+        buf.extend(chunk)
+        if len(buf) > MAX_VOICE_AUDIO_BYTES:
+            raise HTTPException(
+                status_code=status.HTTP_413_CONTENT_TOO_LARGE,
+                detail="audio_too_large",
+            )
+    return bytes(buf), filename, content_type
 
 
 def _transcript_from_payload(
@@ -153,9 +171,19 @@ async def voice_socket(websocket: WebSocket) -> None:
             if message.get("text"):
                 payload = json.loads(message["text"])
                 if payload.get("audio_base64"):
-                    audio_bytes = base64.b64decode(payload["audio_base64"])
+                    # Reject oversized base64 payloads before decoding, and cap
+                    # the decoded result as well (defense in depth).
+                    b64 = payload["audio_base64"]
+                    if len(b64) > MAX_VOICE_AUDIO_BYTES * 2:
+                        await websocket.send_json({"type": "error", "detail": "audio_too_large"})
+                        continue
+                    audio_bytes = base64.b64decode(b64)
                 filename = payload.get("filename") or filename
                 content_type = payload.get("content_type") or content_type
+
+            if len(audio_bytes) > MAX_VOICE_AUDIO_BYTES:
+                await websocket.send_json({"type": "error", "detail": "audio_too_large"})
+                continue
 
             try:
                 transcript = _transcript_from_payload(
