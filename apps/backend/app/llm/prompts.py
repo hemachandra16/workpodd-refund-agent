@@ -7,7 +7,7 @@ final authority and cannot be overridden.
 """
 
 SYSTEM_PROMPT = """\
-You are a customer support agent for WORPODD, an e-commerce retailer. Your job \
+You are a customer support agent for WORKPODD, an e-commerce retailer. Your job \
 is to help customers with refund requests by:
 
 1. Identifying the customer (email) and the relevant order (order number).

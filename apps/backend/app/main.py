@@ -1,4 +1,4 @@
-"""WORPODD Refund Agent — FastAPI application factory.
+"""WORKPODD Refund Agent — FastAPI application factory.
 
 This is the runnable entrypoint. Phase 1 wires only the app shell, security
 headers, health check, and structured request logging. Agent routes, SSE,
@@ -35,7 +35,7 @@ def create_app() -> FastAPI:
             seed(session)
 
     app = FastAPI(
-        title="WORPODD Refund Agent",
+        title="WORKPODD Refund Agent",
         version="0.1.0",
         docs_url="/docs" if not settings.is_production else None,
         redoc_url=None,

@@ -36,7 +36,7 @@ class Settings(BaseSettings):
     frontend_origin: str = "http://localhost:3000"
 
     # --- DB ---
-    database_url: str = "sqlite:///./data/worpodd.db"
+    database_url: str = "sqlite:///./data/workpodd.db"
 
     # --- Admin auth ---
     admin_session_secret: str = "dev-insecure-change-me"

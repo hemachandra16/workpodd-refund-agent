@@ -1,4 +1,4 @@
-"""ORM models for the WORPODD mock CRM.
+"""ORM models for the WORKPODD mock CRM.
 
 Design notes:
 - ``Enum`` columns are bound to Python ``enums`` so the policy engine works
@@ -53,7 +53,7 @@ class ItemCategory(str, enum.Enum):
 
 class RefundReason(str, enum.Enum):
     unwanted = "unwanted"            # changed mind
-    wrong_item = "wrong_item"        # WORPODD shipped wrong item
+    wrong_item = "wrong_item"        # WORKPODD shipped wrong item
     defective = "defective"          # arrived broken / faulty
     damaged_shipping = "damaged_shipping"
     not_as_described = "not_as_described"

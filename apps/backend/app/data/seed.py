@@ -345,7 +345,7 @@ def seed(session: Session) -> dict[str, int]:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Seed the WORPODD mock CRM DB")
+    parser = argparse.ArgumentParser(description="Seed the WORKPODD mock CRM DB")
     parser.add_argument("--reset", action="store_true", help="Drop + recreate tables first")
     args = parser.parse_args()
 

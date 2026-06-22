@@ -3,7 +3,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "WORPODD Support",
+  title: "WORKPODD Support",
   description: "Refund support workspace with live policy reasoning.",
 };
 

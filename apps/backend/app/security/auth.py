@@ -11,14 +11,14 @@ from passlib.exc import PasswordValueError
 from app.config import get_settings
 
 
-ADMIN_COOKIE = "worpodd_admin"
+ADMIN_COOKIE = "workpodd_admin"
 ADMIN_COOKIE_MAX_AGE = 60 * 60 * 8
 _pwd = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def _serializer() -> URLSafeTimedSerializer:
     settings = get_settings()
-    return URLSafeTimedSerializer(settings.admin_session_secret, salt="worpodd-admin")
+    return URLSafeTimedSerializer(settings.admin_session_secret, salt="workpodd-admin")
 
 
 def verify_admin_password(username: str, password: str) -> bool:

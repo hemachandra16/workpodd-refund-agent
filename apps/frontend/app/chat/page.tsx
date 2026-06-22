@@ -255,7 +255,7 @@ export default function ChatPage() {
       <header className="topbar sticky top-0 z-10">
         <div className="mx-auto flex max-w-content items-center justify-between px-5 py-4">
           <div>
-            <p className="label">WORPODD Support</p>
+            <p className="label">WORKPODD Support</p>
             <h1 className="display text-xl font-semibold">Refund workspace</h1>
           </div>
           <div className="flex items-center gap-3">

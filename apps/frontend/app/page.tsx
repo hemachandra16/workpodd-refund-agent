@@ -7,7 +7,7 @@ export default function Home() {
       <header className="topbar">
         <div className="mx-auto flex max-w-content items-center justify-between px-5 py-4">
           <div>
-            <p className="label">WORPODD Support</p>
+            <p className="label">WORKPODD Support</p>
             <h1 className="display text-xl font-semibold">Refund operations</h1>
           </div>
           <ThemeToggle />

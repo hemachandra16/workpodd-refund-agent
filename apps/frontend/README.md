@@ -1,4 +1,4 @@
-# WORPODD Frontend
+# WORKPODD Frontend
 
 Next.js App Router UI for the refund workspace and admin dashboard.
 

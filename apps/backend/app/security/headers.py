@@ -43,5 +43,5 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             "form-action 'self'",
         )
         # Hide server fingerprint.
-        response.headers.setdefault("Server", "worpodd")
+        response.headers.setdefault("Server", "workpodd")
         return response

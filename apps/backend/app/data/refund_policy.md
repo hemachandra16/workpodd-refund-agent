@@ -1,7 +1,7 @@
-# WORPODD Refund Policy (Strict)
+# WORKPODD Refund Policy (Strict)
 
 **Version:** 1.0 · **Effective:** 2026-01-01
-**Scope:** All WORPODD retail orders. This document is the authoritative
+**Scope:** All WORKPODD retail orders. This document is the authoritative
 refund policy. The automated support agent enforces these clauses exactly;
 it is **not authorized to make exceptions**, override a denial, or approve a
 refund that violates any clause below.
@@ -22,7 +22,7 @@ Requests after 30 days are **denied** (defective items excepted — see R8).
 ### R2 — Item condition
 Returned items must be **unused**, with **original tags and packaging** intact.
 Items returned used or with missing tags/packaging are subject to a partial
-refund at WORPODD's discretion (see R5) or denied if condition is unacceptable.
+refund at WORKPODD's discretion (see R5) or denied if condition is unacceptable.
 
 ### R3 — Non-refundable categories
 The following are **never refundable** (unless legally required):
@@ -40,7 +40,7 @@ refund to a different account is **denied** and directed to their bank.
 
 ### R5 — Partial refund (missing packaging)
 If an otherwise-eligible item is returned with **missing packaging only**
-(item still unused), WORPODD may issue a **partial refund** (default 85% of
+(item still unused), WORKPODD may issue a **partial refund** (default 85% of
 item price) at its discretion. This is never a full denial and never a full
 refund.
 
@@ -50,8 +50,8 @@ price **over $200**. The fee is deducted from the refund amount.
 
 ### R7 — Shipping non-refundable
 Original shipping charges are **non-refundable**, **except** when the return
-is due to a WORPODD error (defective or incorrect item — see R8). Return
-shipping is the customer's responsibility unless WORPODD was at fault.
+is due to a WORKPODD error (defective or incorrect item — see R8). Return
+shipping is the customer's responsibility unless WORKPODD was at fault.
 
 ### R8 — Defective / incorrect items
 Items that arrive **defective, damaged, or incorrect** qualify for a **full

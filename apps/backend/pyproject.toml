@@ -1,7 +1,7 @@
 [project]
-name = "worpodd-backend"
+name = "workpodd-backend"
 version = "0.1.0"
-description = "WORPODD AI Customer Support (Refund) Agent — FastAPI + LangGraph + Groq backend"
+description = "WORKPODD AI Customer Support (Refund) Agent — FastAPI + LangGraph + Groq backend"
 requires-python = ">=3.11"
 readme = "README.md"
 

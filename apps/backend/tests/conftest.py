@@ -23,7 +23,7 @@ from app.data.seed import seed  # noqa: E402
 @pytest.fixture(scope="session")
 def seeded_db(tmp_path_factory):
     """Create a fresh SQLite file seeded with all cases, once per session."""
-    db_file = tmp_path_factory.mktemp("worpodd") / "test.db"
+    db_file = tmp_path_factory.mktemp("workpodd") / "test.db"
     # Re-point the app's engine at the temp file for the duration of the session.
     test_engine = create_engine(
         f"sqlite:///{db_file}",

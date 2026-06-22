@@ -1,4 +1,4 @@
-# WORPODD AI Refund Agent
+# WORKPODD AI Refund Agent
 
 AI customer-support agent for e-commerce refunds. It chats with a customer,
 checks order/customer facts through tools, applies a deterministic refund policy,
@@ -86,7 +86,7 @@ GROQ_TTS_MODEL=canopylabs/orpheus-v1-english
 GROQ_TTS_VOICE=troy
 ENVIRONMENT=production
 FRONTEND_ORIGIN=https://your-frontend-domain.example
-DATABASE_URL=sqlite:///./data/worpodd.db
+DATABASE_URL=sqlite:///./data/workpodd.db
 ADMIN_SESSION_SECRET=long-random-secret
 ADMIN_USERNAME=admin
 ADMIN_PASSWORD_HASH=$2b$...
@@ -125,7 +125,7 @@ cd apps/backend
 Verified results at last audit (2026-06-21):
 
 - `pytest -q`: **45 passed** in ~5s (policy engine 29 + dynamic agent 7 + API/auth 2 + voice/security 7).
-- `pip_audit`: **0 vulnerabilities** (only a benign "local package not on PyPI" notice for `worpodd-backend`).
+- `pip_audit`: **0 vulnerabilities** (only a benign "local package not on PyPI" notice for `workpodd-backend`).
 - Rate limits enforced at runtime: chat `30/minute` returns exactly 30 x `200` then `429`.
 - Secret redaction: **0 leaks** across 500 persisted reasoning events (Groq key, session secret, bcrypt hash all checked).
 - Append-only: `DELETE`/`PATCH` on `/admin/sessions/{id}/events` return `405 Method Not Allowed`.

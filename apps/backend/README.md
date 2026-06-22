@@ -1,6 +1,6 @@
-# WORPODD Backend
+# WORKPODD Backend
 
-FastAPI backend for the WORPODD refund agent.
+FastAPI backend for the WORKPODD refund agent.
 
 ## What Runs Here
 
