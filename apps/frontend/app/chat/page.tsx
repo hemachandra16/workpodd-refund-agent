@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 type ReasoningEvent = {
@@ -103,10 +103,15 @@ export default function ChatPage() {
   const [liveEvents, setLiveEvents] = useState<ReasoningEvent[]>([]);
   const [voiceState, setVoiceState] = useState<VoiceState>("idle");
   const [recorder, setRecorder] = useState<MediaRecorder | null>(null);
+  const chatBottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setDemoMode(new URLSearchParams(window.location.search).get("demo") === "1");
   }, []);
+
+  useEffect(() => {
+    chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, pending, liveEvents]);
 
   const latestTool = useMemo(() => {
     const events = result?.reasoning_log ?? [];
@@ -120,6 +125,7 @@ export default function ChatPage() {
     setError("");
     setLiveEvents([]);
     setMessages((current) => [...current, { role: "customer", content: trimmed }]);
+    setMessage("");
 
     try {
       const response = await fetch("/api/chat/stream", {
@@ -292,7 +298,11 @@ export default function ChatPage() {
                 <p className="label">Customer conversation</p>
                 <h2 className="display text-lg font-semibold">Active refund request</h2>
               </div>
-              {sessionId ? <span className="chip">{sessionId}</span> : <span className="chip">new session</span>}
+              {sessionId ? (
+                <button type="button" className="chip" onClick={() => { setSessionId(null); setMessages([{ role: "agent", content: "Hi, how can I help with your refund today?" }]); setResult(null); setLiveEvents([]); setError(""); }}>new session</button>
+              ) : (
+                <span className="chip">new session</span>
+              )}
             </div>
           </div>
 
@@ -326,6 +336,7 @@ export default function ChatPage() {
               </div>
             ) : null}
             {error ? <p className="text-sm text-deny">{error}</p> : null}
+            <div ref={chatBottomRef} />
           </div>
 
           <div className="border-t border-line bg-surface p-4">
@@ -333,7 +344,9 @@ export default function ChatPage() {
               className="field min-h-24 resize-none"
               value={message}
               onChange={(event) => setMessage(event.target.value)}
+              onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); submit(); } }}
               maxLength={1000}
+              placeholder="Describe your refund request…"
             />
             <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
               <span className="tnum text-xs text-muted">{message.length}/1000</span>

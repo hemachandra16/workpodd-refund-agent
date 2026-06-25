@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 type SessionSummary = {
@@ -89,6 +89,7 @@ export default function AdminPage() {
   const [selectedSession, setSelectedSession] = useState<string>("");
   const [events, setEvents] = useState<ReasoningEvent[]>([]);
   const [busy, setBusy] = useState(false);
+  const clauseRailRef = useRef<HTMLDivElement>(null);
 
   const selected = useMemo(
     () => sessions.find((session) => session.session_id === selectedSession),
@@ -107,6 +108,7 @@ export default function AdminPage() {
   useEffect(() => {
     if (!selectedSession || auth !== "ready") return;
     loadEvents(selectedSession);
+    clauseRailRef.current?.scrollTo({ top: 0 });
   }, [selectedSession, auth]);
 
   useEffect(() => {
@@ -226,7 +228,7 @@ export default function AdminPage() {
         <section className="panel w-full max-w-sm p-6 shadow-calm">
           <p className="label">Admin access</p>
           <h1 className="display mt-1 text-2xl font-semibold">Reasoning logs</h1>
-          <div className="mt-6 space-y-3">
+          <form className="mt-6 space-y-3" onSubmit={(e) => { e.preventDefault(); login(); }}>
             <label className="block">
               <span className="label">Username</span>
               <input className="field mt-1" value={username} onChange={(event) => setUsername(event.target.value)} />
@@ -241,10 +243,10 @@ export default function AdminPage() {
               />
             </label>
             {loginError ? <p className="text-sm text-deny">{loginError}</p> : null}
-            <button className="btn btn-primary w-full" type="button" onClick={login}>
+            <button className="btn btn-primary w-full" type="submit">
               Sign in
             </button>
-          </div>
+          </form>
         </section>
       </main>
     );
@@ -313,7 +315,7 @@ export default function AdminPage() {
               {selectedSession ? <span className="chip">{selectedSession}</span> : null}
             </div>
           </div>
-          <div className="max-h-[calc(100vh-13rem)] overflow-auto p-5">
+          <div ref={clauseRailRef} className="max-h-[calc(100vh-13rem)] overflow-auto p-5">
             <EventTimeline events={events} />
           </div>
         </section>

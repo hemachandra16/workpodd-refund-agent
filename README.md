@@ -124,18 +124,12 @@ cd apps/backend
 
 Verified results at last audit (2026-06-21):
 
-- `pytest -q`: **45 passed** in ~5s (policy engine 29 + dynamic agent 7 + API/auth 2 + voice/security 7).
+- `pytest -q`: **47 passed** in ~4s (policy engine 29 + dynamic agent 12 + API/auth 2 + voice/security 4).
 - `pip_audit`: **0 vulnerabilities** (only a benign "local package not on PyPI" notice for `workpodd-backend`).
 - Rate limits enforced at runtime: chat `30/minute` returns exactly 30 x `200` then `429`.
 - Secret redaction: **0 leaks** across 500 persisted reasoning events (Groq key, session secret, bcrypt hash all checked).
 - Append-only: `DELETE`/`PATCH` on `/admin/sessions/{id}/events` return `405 Method Not Allowed`.
 - Injection parity: a transcribed voice "ignore previous instructions" is blocked identically to a typed one.
-
-Frontend:
-
-```powershell
-cd apps/frontend
-npm run build
 
 Frontend:
 
